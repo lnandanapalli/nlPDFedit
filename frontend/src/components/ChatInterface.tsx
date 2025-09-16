@@ -37,6 +37,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ sessionId, files, isConne
     await retryLastMessage();
   };
 
+  const handleDownload = (downloadUrl: string, filename: string) => {
+    // Use the same API base URL as the rest of the application
+    const API_BASE_URL = 'http://localhost:8000';
+    const fullUrl = downloadUrl.startsWith('http') 
+      ? downloadUrl 
+      : `${API_BASE_URL}${downloadUrl}`;
+    
+    console.log('Download URL:', fullUrl); // Debug log
+    
+    // Create a temporary link element and trigger download
+    const link = document.createElement('a');
+    link.href = fullUrl;
+    link.download = filename;
+    link.target = '_blank'; // Open in new tab as fallback
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString([], { 
       hour: '2-digit', 
@@ -58,6 +77,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ sessionId, files, isConne
             : 'bg-gray-700 text-gray-100'
         }`}>
           <div className="whitespace-pre-wrap">{message.content}</div>
+          
+          {/* Download button for successful operations */}
+          {message.operation_result?.show_download_button && message.operation_result?.result_file && (
+            <div className="mt-3 pt-3 border-t border-gray-600">
+              <button
+                onClick={() => {
+                  const result = message.operation_result?.result_file;
+                  if (result) {
+                    handleDownload(result.download_url, result.name);
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Download {message.operation_result.result_file.name}</span>
+              </button>
+            </div>
+          )}
           
           {message.operation_result?.show_retry && (
             <div className="mt-3 pt-3 border-t border-gray-600">

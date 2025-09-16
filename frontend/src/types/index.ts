@@ -22,6 +22,17 @@ export interface ChatMessage {
         status?: string;
         error?: string;
         show_retry?: boolean;
+        show_download_button?: boolean;
+        download_ready?: boolean;
+        result_file?: {
+            id: string;
+            name: string;
+            path: string;
+            download_url: string;
+            file_size?: number;
+            page_count?: number;
+            file_type?: string;
+        };
     };
 }
 
