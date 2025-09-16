@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 from datetime import datetime
 import uuid
-from ..models import PDFFileInfo, ChatMessage, SessionState
+from ..models import PDFFileInfo, ChatMessageResponse, SessionState
 
 class SessionManager:
     def __init__(self):
@@ -57,7 +57,7 @@ class SessionManager:
         session = self.get_session(session_id)
         return session.pdf_files if session else []
     
-    def add_chat_message(self, session_id: str, message: ChatMessage) -> bool:
+    def add_chat_message(self, session_id: str, message: ChatMessageResponse) -> bool:
         """Add a chat message to a session."""
         session = self.get_session(session_id)
         if session:
@@ -65,7 +65,7 @@ class SessionManager:
             return True
         return False
     
-    def get_chat_history(self, session_id: str) -> List[ChatMessage]:
+    def get_chat_history(self, session_id: str) -> List[ChatMessageResponse]:
         """Get chat history for a session."""
         session = self.get_session(session_id)
         return session.chat_history if session else []

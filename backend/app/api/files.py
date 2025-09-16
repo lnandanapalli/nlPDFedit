@@ -13,12 +13,13 @@ from ..services.session_manager import SessionManager
 
 router = APIRouter()
 
-# Dependency injection
+# Dependency injection - Use global session manager instance
 def get_file_service():
     return FileService()
 
 def get_session_manager():
-    return SessionManager()
+    from ..services.session_manager import session_manager
+    return session_manager
 
 
 @router.post("/upload", response_model=FileUploadResponse)
