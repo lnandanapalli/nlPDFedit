@@ -61,6 +61,25 @@ class FileService:
         
         return None
     
+    async def find_file_path_by_id(self, file_id: str) -> Optional[Path]:
+        """Find a file path by file ID across all sessions"""
+        # Search through all session directories
+        for session_dir in self.upload_dir.iterdir():
+            if session_dir.is_dir():
+                # Search for file with this ID in this session
+                for file_path in session_dir.glob(f"{file_id}.*"):
+                    if file_path.is_file():
+                        return file_path
+        
+        # Also check temp directory
+        temp_dir = Path("temp")
+        if temp_dir.exists():
+            for file_path in temp_dir.glob(f"*{file_id}*"):
+                if file_path.is_file():
+                    return file_path
+        
+        return None
+    
     async def delete_file(self, file_id: str, session_id: str) -> bool:
         """Delete a file by ID and session"""
         file_path = await self.get_file_path(file_id, session_id)

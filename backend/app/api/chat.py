@@ -226,8 +226,10 @@ def _create_success_response(
         if hasattr(result_file, 'page_count') and result_file.page_count:
             content += f" • {result_file.page_count} pages"
         
-        # Add download link
-        content += f"\n\n⬇️ **[Download {result_file.name}](/api/v1/files/download/{result_file.id})**"
+        # Add user-friendly download instructions
+        content += f"\n\n⬇️ **Your file is ready for download!**"
+        content += f"\nClick the download button below or use this link:"
+        content += f"\n🔗 [Download {result_file.name}](/api/v1/files/download/{result_file.id})"
     
     return ChatMessageResponse(
         id=str(uuid.uuid4()),
@@ -243,8 +245,13 @@ def _create_success_response(
                 "id": result_file.id,
                 "name": result_file.name,
                 "path": result_file.file_path,
-                "download_url": f"/api/v1/files/download/{result_file.id}"
-            } if result_file else None
+                "download_url": f"/api/v1/files/download/{result_file.id}",
+                "file_size": getattr(result_file, 'file_size', 0),
+                "page_count": getattr(result_file, 'page_count', 0),
+                "file_type": "pdf" if result_file.name.endswith('.pdf') else "text"
+            } if result_file else None,
+            "show_download_button": True,
+            "download_ready": True
         }
     )
 

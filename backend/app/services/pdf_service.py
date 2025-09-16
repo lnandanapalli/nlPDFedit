@@ -64,8 +64,13 @@ class PDFService:
         if not output_name.endswith('.txt'):
             output_name += '.txt'
         
+        # Generate unique file ID first
+        file_id = str(uuid.uuid4())
+        
         input_path = Path(input_file.file_path)
-        output_path = Path(self.temp_dir) / f"{session_id}_{output_name}"
+        # Use file_id for the actual file name to make downloads work
+        file_extension = Path(output_name).suffix
+        output_path = Path(self.temp_dir) / f"{file_id}{file_extension}"
         
         if not input_path.exists():
             raise FileNotFoundError(f"Input file not found: {input_path}")
@@ -81,8 +86,8 @@ class PDFService:
             file_size = output_path.stat().st_size if output_path.exists() else 0
             
             result_file = PDFFileInfo(
-                id=str(uuid.uuid4()),
-                name=output_name,
+                id=file_id,
+                name=output_name,  # Keep the user-friendly name for display
                 original_filename=output_name,
                 file_path=str(output_path),
                 file_size=file_size,
@@ -129,8 +134,11 @@ class PDFService:
         if not output_name.endswith('.pdf'):
             output_name += '.pdf'
         
-        # Create output path
-        output_path = Path(self.temp_dir) / f"{session_id}_{output_name}"
+        # Generate unique file ID first
+        file_id = str(uuid.uuid4())
+        
+        # Create output path using file_id for the actual filename
+        output_path = Path(self.temp_dir) / f"{file_id}.pdf"
         input_path = Path(input_file.file_path)
         
         if not input_path.exists():
@@ -150,8 +158,8 @@ class PDFService:
             
             # Create result file info
             result_file = PDFFileInfo(
-                id=str(uuid.uuid4()),
-                name=output_name,
+                id=file_id,
+                name=output_name,  # Keep user-friendly name for display
                 original_filename=output_name,
                 file_path=str(output_path),
                 file_size=file_size,

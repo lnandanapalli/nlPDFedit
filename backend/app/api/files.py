@@ -89,7 +89,7 @@ async def download_file(
     """Download a file by ID"""
     
     try:
-        file_path = await file_service.get_file_path(file_id)
+        file_path = await file_service.find_file_path_by_id(file_id)
         if not file_path or not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="File not found")
         
