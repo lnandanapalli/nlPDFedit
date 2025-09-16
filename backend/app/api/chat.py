@@ -33,7 +33,7 @@ async def send_message(
     try:
         # Get or create session
         session_id = request.session_id or str(uuid.uuid4())
-        session = await session_manager.get_or_create_session(session_id)
+        session = session_manager.get_or_create_session(session_id)
         
         # Create user message
         user_message = ChatMessageResponse(
@@ -59,7 +59,7 @@ async def send_message(
         session.chat_history.append(assistant_response)
         
         # Update session
-        await session_manager.update_session(session)
+        session_manager.update_session(session)
         
         return assistant_response
         
@@ -75,10 +75,7 @@ async def get_chat_history(
     """Get chat history for a session"""
     
     try:
-        session = await session_manager.get_session(session_id)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
-        
+        session = session_manager.get_or_create_session(session_id)
         return session.chat_history
         
     except Exception as e:
@@ -93,12 +90,10 @@ async def clear_chat_history(
     """Clear chat history for a session"""
     
     try:
-        session = await session_manager.get_session(session_id)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
+        session = session_manager.get_or_create_session(session_id)
         
         session.chat_history = []
-        await session_manager.update_session(session)
+        session_manager.update_session(session)
         
         return {"message": "Chat history cleared"}
         
@@ -113,7 +108,7 @@ async def get_active_sessions(
     """Get list of active session IDs"""
     
     try:
-        return await session_manager.get_active_sessions()
+        return session_manager.get_active_sessions()
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { apiService } from '../services/apiService';
+import apiService from '../services/apiService';
 import { PDFFileInfo } from '../types';
 
 interface FileUploadProps {
@@ -142,7 +142,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ sessionId, onFileUploaded }) =>
 
       {error && (
         <div className="mt-4 p-3 bg-red-900 border border-red-600 rounded-lg text-red-100 text-sm">
-          {error}
+          {typeof error === 'string' ? error : 'An error occurred'}
         </div>
       )}
     </div>

@@ -146,7 +146,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ sessionId, files, isConne
       <div className="p-4 border-t border-gray-700">
         {error && (
           <div className="mb-3 p-3 bg-red-900 border border-red-600 rounded-lg text-red-100 text-sm">
-            {error}
+            {typeof error === 'string' ? error : 'An error occurred'}
           </div>
         )}
         

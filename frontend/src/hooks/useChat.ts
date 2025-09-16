@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { apiService } from '../services/apiService';
+import apiService from '../services/apiService';
 import { ChatMessage, ChatMessageRequest } from '../types';
 
 export const useChat = (sessionId: string) => {

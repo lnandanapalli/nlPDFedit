@@ -4,7 +4,7 @@ import ChatInterface from './components/ChatInterface';
 import FileUpload from './components/FileUpload';
 import PDFList from './components/PDFList';
 import { useSession } from './hooks/useSession';
-import { wsService } from './services/websocketService';
+import wsService from './services/websocketService';
 import { PDFFileInfo } from './types';
 import './App.css';
 

@@ -23,6 +23,19 @@ class SessionManager:
         """Get a session by ID."""
         return self.sessions.get(session_id)
     
+    def get_or_create_session(self, session_id: str) -> SessionState:
+        """Get a session by ID, or create it if it doesn't exist."""
+        session = self.sessions.get(session_id)
+        if not session:
+            session = SessionState(
+                session_id=session_id,
+                pdf_files=[],
+                chat_history=[],
+                created_at=datetime.now().isoformat()
+            )
+            self.sessions[session_id] = session
+        return session
+    
     def add_pdf_file(self, session_id: str, pdf_file: PDFFileInfo) -> bool:
         """Add a PDF file to a session."""
         session = self.get_session(session_id)
@@ -75,6 +88,17 @@ class SessionManager:
     def list_sessions(self) -> List[str]:
         """List all session IDs."""
         return list(self.sessions.keys())
+    
+    def update_session(self, session: SessionState) -> bool:
+        """Update a session."""
+        if session.session_id in self.sessions:
+            self.sessions[session.session_id] = session
+            return True
+        return False
+    
+    def get_active_sessions(self) -> List[str]:
+        """Get list of active session IDs."""
+        return self.list_sessions()
 
 # Global session manager instance
 session_manager = SessionManager()

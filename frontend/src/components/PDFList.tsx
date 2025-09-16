@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiService } from '../services/apiService';
+import apiService from '../services/apiService';
 import { PDFFileInfo } from '../types';
 
 interface PDFListProps {
@@ -16,7 +16,7 @@ const PDFList: React.FC<PDFListProps> = ({ files, onFileDeleted, sessionId }) =>
     try {
       const sessionFiles = await apiService.getFiles(sessionId);
       // Update parent component with files from session
-      sessionFiles.forEach(file => {
+      sessionFiles.forEach((file: PDFFileInfo) => {
         if (!files.find(f => f.id === file.id)) {
           // File exists in session but not in local state - this shouldn't normally happen
           // but we'll handle it gracefully
@@ -62,7 +62,7 @@ const PDFList: React.FC<PDFListProps> = ({ files, onFileDeleted, sessionId }) =>
     setError(null);
 
     try {
-      await apiService.deleteFile(file.id);
+      await apiService.deleteFile(file.id, sessionId);
       onFileDeleted(file.id);
     } catch (err: any) {
       const errorMessage = apiService.handleError(err);
@@ -104,7 +104,7 @@ const PDFList: React.FC<PDFListProps> = ({ files, onFileDeleted, sessionId }) =>
 
       {error && (
         <div className="mb-4 p-3 bg-red-900 border border-red-600 rounded-lg text-red-100 text-sm">
-          {error}
+          {typeof error === 'string' ? error : 'An error occurred'}
         </div>
       )}
 

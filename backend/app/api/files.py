@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Form
 from fastapi.responses import FileResponse
 from typing import List
 import os
@@ -23,7 +23,7 @@ def get_session_manager():
 
 @router.post("/upload", response_model=FileUploadResponse)
 async def upload_file(
-    session_id: str,
+    session_id: str = Form(...),
     file: UploadFile = File(...),
     file_service: FileService = Depends(get_file_service),
     session_manager: SessionManager = Depends(get_session_manager)
@@ -32,26 +32,26 @@ async def upload_file(
     
     try:
         # Validate file type
-        if not file.filename.lower().endswith('.pdf'):
+        if not file.filename or not file.filename.lower().endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
         
         # Validate file size (50MB limit)
         max_size = 50 * 1024 * 1024  # 50MB
-        if file.size > max_size:
+        if file.size and file.size > max_size:
             raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
         
         # Process file upload
         file_info = await file_service.save_uploaded_file(file, session_id)
         
         # Add to session
-        session = await session_manager.get_or_create_session(session_id)
+        session = session_manager.get_or_create_session(session_id)
         session.pdf_files.append(file_info)
         
         # Set as current PDF if it's the first one
         if not session.current_pdf_id:
             session.current_pdf_id = file_info.id
             
-        await session_manager.update_session(session)
+        session_manager.update_session(session)
         
         return FileUploadResponse(
             file_id=file_info.id,
@@ -73,10 +73,7 @@ async def list_files(
     """Get list of uploaded files for a session"""
     
     try:
-        session = await session_manager.get_session(session_id)
-        if not session:
-            return []
-        
+        session = session_manager.get_or_create_session(session_id)
         return session.pdf_files
         
     except Exception as e:
@@ -119,15 +116,14 @@ async def delete_file(
         await file_service.delete_file(file_id)
         
         # Remove from session
-        session = await session_manager.get_session(session_id)
-        if session:
-            session.pdf_files = [f for f in session.pdf_files if f.id != file_id]
+        session = session_manager.get_or_create_session(session_id)
+        session.pdf_files = [f for f in session.pdf_files if f.id != file_id]
+        
+        # Update current PDF if deleted
+        if session.current_pdf_id == file_id:
+            session.current_pdf_id = session.pdf_files[0].id if session.pdf_files else None
             
-            # Update current PDF if deleted
-            if session.current_pdf_id == file_id:
-                session.current_pdf_id = session.pdf_files[0].id if session.pdf_files else None
-                
-            await session_manager.update_session(session)
+        session_manager.update_session(session)
         
         return {"message": "File deleted successfully"}
         
@@ -144,9 +140,7 @@ async def set_current_file(
     """Set current working PDF"""
     
     try:
-        session = await session_manager.get_session(session_id)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
+        session = session_manager.get_or_create_session(session_id)
         
         # Validate file exists in session
         file_exists = any(f.id == file_id for f in session.pdf_files)
@@ -154,7 +148,7 @@ async def set_current_file(
             raise HTTPException(status_code=404, detail="File not found in session")
         
         session.current_pdf_id = file_id
-        await session_manager.update_session(session)
+        session_manager.update_session(session)
         
         return {"message": "Current PDF updated", "current_pdf_id": file_id}
         

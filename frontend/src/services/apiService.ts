@@ -1,129 +1,81 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import {
-    ChatMessage,
-    ChatMessageRequest,
-    PDFFileInfo,
-    PDFOperationRequest,
-    FileUploadResponse,
-    SessionState
-} from '../types';
+﻿import axios from "axios";
 
-class APIService {
-    private api: AxiosInstance;
-    private baseURL: string;
+const API_BASE_URL = "http://localhost:8000";
 
-    constructor() {
-        this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-        this.api = axios.create({
-            baseURL: this.baseURL,
-            timeout: 30000,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        // Add response interceptor for error handling
-        this.api.interceptors.response.use(
-            (response: AxiosResponse) => response,
-            (error: any) => {
-                console.error('API Error:', error.response?.data || error.message);
-                return Promise.reject(error);
-            }
-        );
-    }
-
-    // Health check
-    async health(): Promise<{ status: string }> {
-        const response = await this.api.get('/health');
-        return response.data;
-    }
-
-    // Chat endpoints
-    async sendMessage(request: ChatMessageRequest): Promise<ChatMessage> {
-        const response = await this.api.post('/api/chat/send', request);
-        return response.data;
-    }
-
-    async getChatHistory(sessionId: string): Promise<ChatMessage[]> {
-        const response = await this.api.get(`/api/chat/history/${sessionId}`);
-        return response.data;
-    }
-
-    async clearChatHistory(sessionId: string): Promise<{ message: string }> {
-        const response = await this.api.delete(`/api/chat/history/${sessionId}`);
-        return response.data;
-    }
-
-    // File management endpoints
-    async uploadFile(file: File, sessionId: string): Promise<FileUploadResponse> {
+const apiService = {
+    uploadFile: async (file: File, sessionId: string) => {
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('session_id', sessionId);
+        formData.append("file", file);
+        formData.append("session_id", sessionId);
 
-        const response = await this.api.post('/api/files/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
+        const response = await axios.post(`${API_BASE_URL}/api/v1/files/upload`, formData, {
+            headers: { "Content-Type": "multipart/form-data" }
         });
         return response.data;
-    }
+    },
 
-    async getFiles(sessionId: string): Promise<PDFFileInfo[]> {
-        const response = await this.api.get(`/api/files/${sessionId}`);
+    getFiles: async (sessionId: string) => {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/files/list/${sessionId}`);
         return response.data;
-    }
+    },
 
-    async deleteFile(fileId: string): Promise<{ message: string }> {
-        const response = await this.api.delete(`/api/files/${fileId}`);
+    sendMessage: async (request: any) => {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/chat/message`, request);
         return response.data;
-    }
+    },
 
-    async downloadFile(fileId: string): Promise<Blob> {
-        const response = await this.api.get(`/api/files/download/${fileId}`, {
-            responseType: 'blob',
+    getChatHistory: async (sessionId: string) => {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/chat/history/${sessionId}`);
+        return response.data;
+    },
+
+    clearChatHistory: async (sessionId: string) => {
+        const response = await axios.delete(`${API_BASE_URL}/api/v1/chat/history/${sessionId}`);
+        return response.data;
+    },
+
+    downloadFile: async (fileId: string) => {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/files/download/${fileId}`, {
+            responseType: 'blob'
         });
         return response.data;
-    }
+    },
 
-    // PDF operations endpoint
-    async performPDFOperation(request: PDFOperationRequest): Promise<PDFFileInfo> {
-        const response = await this.api.post('/api/pdf/operation', request);
+    deleteFile: async (fileId: string, sessionId: string) => {
+        const response = await axios.delete(`${API_BASE_URL}/api/v1/files/${fileId}?session_id=${sessionId}`);
         return response.data;
-    }
+    },
 
-    // Session management
-    async getSession(sessionId: string): Promise<SessionState> {
-        const response = await this.api.get(`/api/session/${sessionId}`);
-        return response.data;
-    }
-
-    async createSession(): Promise<{ session_id: string }> {
-        const response = await this.api.post('/api/session/create');
-        return response.data;
-    }
-
-    // Utility method to handle file downloads
-    downloadBlob(blob: Blob, filename: string): void {
+    downloadBlob: (blob: Blob, filename: string) => {
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
         window.URL.revokeObjectURL(url);
-    }
+        document.body.removeChild(a);
+    },
 
-    // Error handling helper
-    handleError(error: any): string {
-        if (error.response?.data?.error) {
-            return error.response.data.error;
-        } else if (error.message) {
+    handleError: (error: any): string => {
+        if (error.response?.data?.detail) {
+            // Handle FastAPI validation errors (array of error objects)
+            if (Array.isArray(error.response.data.detail)) {
+                return error.response.data.detail
+                    .map((err: any) => err.msg || 'Validation error')
+                    .join(', ');
+            }
+            // Handle single error message
+            return error.response.data.detail;
+        }
+        if (error.response?.data?.message) {
+            return error.response.data.message;
+        }
+        if (error.message) {
             return error.message;
         }
-        return 'An unexpected error occurred';
+        return "An unexpected error occurred";
     }
-}
+};
 
-export const apiService = new APIService();
-export default APIService;
+export default apiService;
