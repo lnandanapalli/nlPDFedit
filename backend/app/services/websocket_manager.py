@@ -6,8 +6,9 @@ import asyncio
 
 class WebSocketManager:
     def __init__(self):
-        # Store active connections
+        # Store active connections (both WebSocket and Socket.IO)
         self.active_connections: Dict[str, WebSocket] = {}
+        self.socketio_connections: Dict[str, str] = {}  # sid -> session_id mapping
         
     async def connect(self, websocket: WebSocket, client_id: str):
         await websocket.accept()
@@ -20,6 +21,17 @@ class WebSocketManager:
             }),
             client_id
         )
+    
+    async def connect_socketio(self, sid: str, session_id: str = None):
+        """Handle Socket.IO connection"""
+        self.socketio_connections[sid] = session_id or sid
+        print(f"Socket.IO client {sid} connected with session {session_id}")
+    
+    async def disconnect_socketio(self, sid: str):
+        """Handle Socket.IO disconnection"""
+        if sid in self.socketio_connections:
+            del self.socketio_connections[sid]
+            print(f"Socket.IO client {sid} disconnected")
         
     def disconnect(self, client_id: str):
         if client_id in self.active_connections:

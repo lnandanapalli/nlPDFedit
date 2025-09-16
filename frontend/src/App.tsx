@@ -21,17 +21,17 @@ const App: React.FC = () => {
           setIsConnected(true);
           console.log('Connected to WebSocket');
         })
-        .catch((error) => {
+        .catch((error: any) => {
           console.error('Failed to connect to WebSocket:', error);
           setIsConnected(false);
         });
 
       // Setup WebSocket listeners
-      wsService.onMessage((message) => {
+      wsService.onMessage((message: any) => {
         console.log('Received WebSocket message:', message);
       });
 
-      wsService.onError((error) => {
+      wsService.onError((error: any) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
       });

@@ -36,11 +36,6 @@ app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(pdf_operations.router, prefix="/api/v1/pdf", tags=["pdf_operations"])
 
-# Health check endpoint
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "message": "PDF Assistant API is running"}
-
 # WebSocket endpoint for real-time chat
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -52,6 +47,11 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             await websocket_manager.send_personal_message(f"Echo: {data}", client_id)
     except WebSocketDisconnect:
         websocket_manager.disconnect(client_id)
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "PDF Assistant API is running"}
 
 # Serve uploaded files
 @app.get("/files/{file_path:path}")

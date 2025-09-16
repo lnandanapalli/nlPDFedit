@@ -27,6 +27,15 @@ class ChatMessageRequest(BaseModel):
     session_id: Optional[str] = None
 
 
+class ChatMessage(BaseModel):
+    id: str
+    content: str
+    message_type: MessageType
+    timestamp: datetime
+    session_id: str
+    operation_result: Optional[Dict[str, Any]] = None
+
+
 class ChatMessageResponse(BaseModel):
     id: str
     content: str
